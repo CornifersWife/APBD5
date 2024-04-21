@@ -10,7 +10,6 @@ builder.Services.AddScoped<IAnimalRepository, AnimalRepository>();
 builder.Configuration.GetConnectionString("DefaultConnection");
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();

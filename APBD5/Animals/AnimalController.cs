@@ -12,9 +12,9 @@ public class AnimalController : ControllerBase {
         this.configuration = configuration;
         this.animalService = animalService;
     }
-    
+
     [HttpGet]
-    public IActionResult GetAnimals([FromQuery] string orderBy = "name") {
+    public IActionResult GetAnimals([FromQuery] string? orderBy = "name") {
         var animals = animalService.GetAnimals(orderBy);
         return Ok(animals);
     }
@@ -26,20 +26,31 @@ public class AnimalController : ControllerBase {
     }
 
     [HttpPost]
-    public IActionResult AddAnimal([FromBody] Animal animal) {
-        animalService.AddAnimal(animal);
+    public IActionResult AddAnimal([FromBody] Animal animalToAdd) {
+        animalService.AddAnimal(animalToAdd);
         return Created();
     }
 
     [HttpPut("{id::int}")]
-    public IActionResult UpdateAnimal(int id, [FromBody]Animal newAnimalData) {
-        animalService.UpdateAnimal(id, newAnimalData);
-        return Ok($"Updated animal with id {id}");
+    public IActionResult UpdateAnimal(int id, [FromBody] Animal newAnimalData) {
+        try {
+            animalService.UpdateAnimal(id, newAnimalData);
+            return Ok($"Updated animal with id {id}");
+        }
+        catch (Exception e) {
+            return BadRequest(e);
+        }
     }
 
     [HttpDelete("{id::int}")]
     public IActionResult RemoveAnimal(int id) {
-        animalService.RemoveAnimal(id);
-        return NoContent();
+        try {
+            animalService.RemoveAnimal(id);
+            return Ok($"Removed animal with id {id}");
+        }
+        catch (Exception e) {
+            return BadRequest(e);
+        }
+        
     }
 }

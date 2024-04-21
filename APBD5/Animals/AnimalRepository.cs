@@ -7,7 +7,7 @@ public interface IAnimalRepository {
     public Animal Get(int id);
     public int Create(Animal animal);
     public int Update(int id, Animal newData);
-    public void Delete(int id);
+    public int Delete(int id);
 }
 
 public class AnimalRepository : IAnimalRepository {
@@ -21,9 +21,8 @@ public class AnimalRepository : IAnimalRepository {
         using var con = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
         con.Open();
 
-        using var cmd = new SqlCommand($"SELECT * FROM Animals ORDER BY @OrderBy");
+        using var cmd = new SqlCommand($"SELECT * FROM Animals ORDER BY {orderBy}");
         cmd.Connection = con;
-        cmd.Parameters.AddWithValue("@OrderBy", orderBy);
         var dr = cmd.ExecuteReader();
         var animals = new List<Animal>();
         while (dr.Read()) {
@@ -64,8 +63,11 @@ public class AnimalRepository : IAnimalRepository {
         using var con = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
         con.Open();
 
-        using var cmd = new SqlCommand( "INSERT INTO Animals(Name, Description, Category, Area) VALUES(@Name, @Description, @Category, @Area)");
-        cmd.Connection = con; 
+        using var cmd =
+            new SqlCommand(
+                "INSERT INTO Animals(Name, Description, Category, Area) " +
+                "VALUES(@Name, @Description, @Category, @Area)");
+        cmd.Connection = con;
         cmd.Parameters.AddWithValue("@Name", animal.Name);
         cmd.Parameters.AddWithValue("@Description", animal.Description);
         cmd.Parameters.AddWithValue("@Category", animal.Category);
@@ -76,10 +78,34 @@ public class AnimalRepository : IAnimalRepository {
     }
 
     public int Update(int id, Animal newData) {
-        throw new NotImplementedException();
+        using var con = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
+        con.Open();
+
+        using var cmd =
+            new SqlCommand(
+                "UPDATE Animals " +
+                "SET Name = @Name, Description = @Description, Category = @Category, Area = @Area " +
+                "WHERE IdAnimal = @IdAnimal");
+        cmd.Connection = con;
+        cmd.Parameters.AddWithValue("@Name", newData.Name);
+        cmd.Parameters.AddWithValue("@Description", newData.Description);
+        cmd.Parameters.AddWithValue("@Category", newData.Category);
+        cmd.Parameters.AddWithValue("@Area", newData.Area);
+        cmd.Parameters.AddWithValue("@IdAnimal", id);
+
+        var affectedCount = cmd.ExecuteNonQuery();
+        return affectedCount;
     }
 
-    public void Delete(int id) {
-        throw new NotImplementedException();
+    public int Delete(int id) {
+        using var con = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
+        con.Open();
+
+        using var cmd = new SqlCommand("DELETE FROM Animals WHERE IdAnimal = @IdAnimal");
+        cmd.Connection = con;
+        cmd.Parameters.AddWithValue("@IdAnimal", id);
+
+        int affectedRows = cmd.ExecuteNonQuery();
+        return affectedRows;
     }
 }

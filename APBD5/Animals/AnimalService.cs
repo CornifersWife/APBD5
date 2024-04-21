@@ -1,26 +1,39 @@
-using APBD5.Animals;
+namespace APBD5.Animals;
 
 public interface IAnimalService {
-    public IEnumerable<Animal> GetAnimals();
-    public Animal GetAnimal(int animalId){}
+    public IEnumerable<Animal> GetAnimals(string orderBy);
+    public Animal GetAnimal(int id);
+    public void AddAnimal(Animal animal);
+    public void UpdateAnimal(int id, Animal newAnimal);
+    public void RemoveAnimal(int id);
 }
 
 public class AnimalService : IAnimalService {
-    private readonly IAnimalRepository _animalRepository;
+    private readonly IAnimalRepository animalRepository;
 
     public AnimalService(IAnimalRepository animalRepository) {
-        _animalRepository = animalRepository;
+        this.animalRepository = animalRepository;
     }
 
-    public IEnumerable<Animal> GetSortedAnimals(string orderBy) {
-        var animals = _animalRepository.GetAllAnimals();
+    public IEnumerable<Animal> GetAnimals(string orderBy = "name") {
+        var animals = animalRepository.Get(orderBy);
+        return animals;
+    }
 
-        return orderBy.ToLower() switch {
-            "name" => animals.OrderBy(a => a.Name),
-            "description" => animals.OrderBy(a => a.Description),
-            "category" => animals.OrderBy(a => a.Category),
-            "area" => animals.OrderBy(a => a.Area),
-            _ => animals.OrderBy(a => a.Name) // Default to 'name'
-        };
+    public Animal GetAnimal(int id) {
+        var animal = animalRepository.Get(id);
+        return animal;
+    }
+
+    public void AddAnimal(Animal animal) {
+        animalRepository.Create(animal);
+    }
+
+    public void UpdateAnimal(int id, Animal newAnimal) {
+        animalRepository.Update(id, newAnimal);
+    }
+
+    public void RemoveAnimal(int id) {
+        animalRepository.Delete(id);
     }
 }

@@ -1,57 +1,85 @@
 using System.Data.SqlClient;
-using APBD5.Animals;
+
+namespace APBD5.Animals;
 
 public interface IAnimalRepository {
-    public IEnumerable<Animal> GetAnimals(string orderBy);
-    public Animal GetAnimal(int animalId);
-    public void AddAnimal(Animal animal);
-    public void ChangeAnima(int animalId, Animal newAnimalData);
-    public void removeAnimal(int animalId);
+    public IEnumerable<Animal> Get(string orderBy);
+    public Animal Get(int id);
+    public int Create(Animal animal);
+    public int Update(int id, Animal newData);
+    public void Delete(int id);
 }
 
 public class AnimalRepository : IAnimalRepository {
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration configuration;
 
     public AnimalRepository(IConfiguration configuration) {
-        _configuration = configuration;
+        this.configuration = configuration;
     }
-    
 
-    public IEnumerable<Animal> GetAnimals(string orderBy) {
+    public IEnumerable<Animal> Get(string orderBy) {
+        using var con = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
+        con.Open();
+
+        using var cmd = new SqlCommand($"SELECT * FROM Animals ORDER BY @OrderBy");
+        cmd.Connection = con;
+        cmd.Parameters.AddWithValue("@OrderBy", orderBy);
+        var dr = cmd.ExecuteReader();
         var animals = new List<Animal>();
-        string query = $"SELECT * FROM Animals ORDER BY {orderBy}";
-
-        using (var sqlConnection = new SqlConnection(_configuration.GetConnectionString("Default"))) {
-            sqlConnection.Open();
-            var sqlCommand = sqlConnection.CreateCommand();
-            sqlCommand.CommandText = $"SELECT * FROM Animals ORDER BY {orderBy}";
-                using (var reader = sqlCommand.ExecuteReader()) {
-                    while (reader.Read()) {
-                        animals.Add(new Animal {
-                            Name = reader.GetString("Name"),
-                            Age = reader.GetInt32("Age"),
-                            Type = reader.GetString("Type")
-                        });
-                    }
-                
-            }
+        while (dr.Read()) {
+            var animal = new Animal {
+                Id = (int)dr["IdAnimal"],
+                Name = dr["Name"].ToString(),
+                Description = dr["Description"].ToString(),
+                Category = dr["Category"].ToString(),
+                Area = dr["Area"].ToString(),
+            };
+            animals.Add(animal);
         }
+
         return animals;
     }
 
-    public Animal GetAnimal(int animalId) {
+    public Animal Get(int id) {
+        using var con = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
+        con.Open();
+
+        using var cmd = new SqlCommand("SELECT * FROM Animals WHERE IdAnimal = @IdAnimal");
+        cmd.Parameters.AddWithValue("@IdAnimal", id);
+        cmd.Connection = con;
+        var dr = cmd.ExecuteReader();
+        if (!dr.Read()) return null;
+        var animal = new Animal {
+            Id = (int)dr["IdAnimal"],
+            Name = dr["Name"].ToString(),
+            Description = dr["Description"].ToString(),
+            Category = dr["Category"].ToString(),
+            Area = dr["Area"].ToString(),
+        };
+
+        return animal;
+    }
+
+    public int Create(Animal animal) {
+        using var con = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
+        con.Open();
+
+        using var cmd = new SqlCommand( "INSERT INTO Animals(Name, Description, Category, Area) VALUES(@Name, @Description, @Category, @Area)");
+        cmd.Connection = con; 
+        cmd.Parameters.AddWithValue("@Name", animal.Name);
+        cmd.Parameters.AddWithValue("@Description", animal.Description);
+        cmd.Parameters.AddWithValue("@Category", animal.Category);
+        cmd.Parameters.AddWithValue("@Area", animal.Area);
+
+        var affectedCount = cmd.ExecuteNonQuery();
+        return affectedCount;
+    }
+
+    public int Update(int id, Animal newData) {
         throw new NotImplementedException();
     }
 
-    public void AddAnimal(Animal animal) {
-        throw new NotImplementedException();
-    }
-
-    public void ChangeAnima(int animalId, Animal newAnimalData) {
-        throw new NotImplementedException();
-    }
-
-    public void removeAnimal(int animalId) {
+    public void Delete(int id) {
         throw new NotImplementedException();
     }
 }
